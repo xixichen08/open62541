@@ -810,6 +810,10 @@ START_TEST(UA_Float_encodeShallWorkOnExample) {
         {0x00, 0x00, 0x80, 0x7F}, // INF
         {0x00, 0x00, 0x80, 0xFF} // -INF
     };
+    #ifdef __TINYC__
+    // On tcc NAN is encoded as 127
+    result[4][3] = 127;
+    #endif
 
     UA_Byte data[] = {0x55, 0x55, 0x55,  0x55};
     UA_ByteString dst = {4, data};
