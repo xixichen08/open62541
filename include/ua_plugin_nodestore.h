@@ -483,6 +483,10 @@ UA_StatusCode UA_EXPORT
 UA_Node_setAttributes(UA_Node *node, const void *attributes,
                       const UA_DataType *attributeType);
 
+/* Copy the references from one array to another */
+UA_StatusCode UA_EXPORT
+UA_NodeReferenceKind_copy(const UA_NodeReferenceKind *src, size_t srcSize, UA_NodeReferenceKind **dst);
+
 /* Reset the destination node and copy the content of the source */
 UA_StatusCode UA_EXPORT
 UA_Node_copy(const UA_Node *src, UA_Node *dst);

@@ -58,23 +58,22 @@ UA_Server_forEachChildNodeCall(UA_Server *server, UA_NodeId parentNodeId,
      * delete references from within the callback. In single-threaded mode this
      * changes the same node we point at here. In multi-threaded mode, this
      * creates a new copy as nodes are truly immutable. */
-    UA_ReferenceNode *refs = NULL;
-    size_t refssize = parent->referencesSize;
-    UA_StatusCode retval = UA_Array_copy(parent->references, parent->referencesSize,
-        (void**)&refs, &UA_TYPES[UA_TYPES_REFERENCENODE]);
+    UA_NodeReferenceKind *refs = NULL;
+    UA_StatusCode retval = UA_NodeReferenceKind_copy(parent->references, parent->referencesSize, &refs);
     if(retval != UA_STATUSCODE_GOOD) {
         server->config.nodestore.releaseNode(server->config.nodestore.context, parent);
         return retval;
     }
 
     for(size_t i = parent->referencesSize; i > 0; --i) {
-        UA_ReferenceNode *ref = &refs[i - 1];
-        retval |= callback(ref->targetId.nodeId, ref->isInverse,
+        UA_NodeReferenceKind *ref = &refs[i - 1];
+        for (size_t j = 0; j<ref->targetIdsSize; j++)
+            retval |= callback(ref->targetIds[j].nodeId, ref->isInverse,
                            ref->referenceTypeId, handle);
     }
 
     server->config.nodestore.releaseNode(server->config.nodestore.context, parent);
-    UA_Array_delete(refs, refssize, &UA_TYPES[UA_TYPES_REFERENCENODE]);
+    UA_free(refs);
     return retval;
 }
 

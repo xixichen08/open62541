@@ -135,6 +135,40 @@ UA_ViewNode_copy(const UA_ViewNode *src, UA_ViewNode *dst) {
 }
 
 UA_StatusCode
+UA_NodeReferenceKind_copy(const UA_NodeReferenceKind *src, const size_t srcSize, UA_NodeReferenceKind **dst) {
+    *dst = NULL;
+    if(srcSize > 0) {
+        *dst = (UA_NodeReferenceKind*)
+                UA_calloc(srcSize, sizeof(UA_NodeReferenceKind));
+        if(!*dst) {
+            return UA_STATUSCODE_BADOUTOFMEMORY;
+        }
+
+        UA_StatusCode retval;
+        for(size_t i = 0; i < srcSize; ++i) {
+            const UA_NodeReferenceKind *srefs = &src[i];
+            UA_NodeReferenceKind *drefs = &(*dst)[i];
+            drefs->isInverse = srefs->isInverse;
+            retval = UA_NodeId_copy(&srefs->referenceTypeId, &drefs->referenceTypeId);
+            if(retval != UA_STATUSCODE_GOOD)
+                break;
+            retval = UA_Array_copy(srefs->targetIds, srefs->targetIdsSize,
+                                   (void**)&drefs->targetIds,
+                                   &UA_TYPES[UA_TYPES_EXPANDEDNODEID]);
+            if(retval != UA_STATUSCODE_GOOD)
+                break;
+            drefs->targetIdsSize = srefs->targetIdsSize;
+        }
+        if(retval != UA_STATUSCODE_GOOD) {
+            UA_free(*dst);
+            *dst = NULL;
+            return retval;
+        }
+    }
+    return UA_STATUSCODE_GOOD;
+}
+
+UA_StatusCode
 UA_Node_copy(const UA_Node *src, UA_Node *dst) {
     if(src->nodeClass != dst->nodeClass)
         return UA_STATUSCODE_BADINTERNALERROR;
@@ -153,34 +187,10 @@ UA_Node_copy(const UA_Node *src, UA_Node *dst) {
     }
 
     /* Copy the references */
-    dst->references = NULL;
-    if(src->referencesSize > 0) {
-        dst->references = (UA_NodeReferenceKind*)
-            UA_calloc(src->referencesSize, sizeof(UA_NodeReferenceKind));
-        if(!dst->references) {
-            UA_Node_deleteMembers(dst);
-            return UA_STATUSCODE_BADOUTOFMEMORY;
-        }
-        dst->referencesSize = src->referencesSize;
-
-        for(size_t i = 0; i < src->referencesSize; ++i) {
-            UA_NodeReferenceKind *srefs = &src->references[i];
-            UA_NodeReferenceKind *drefs = &dst->references[i];
-            drefs->isInverse = srefs->isInverse;
-            retval = UA_NodeId_copy(&srefs->referenceTypeId, &drefs->referenceTypeId);
-            if(retval != UA_STATUSCODE_GOOD)
-                break;
-            retval = UA_Array_copy(srefs->targetIds, srefs->targetIdsSize,
-                                    (void**)&drefs->targetIds,
-                                    &UA_TYPES[UA_TYPES_EXPANDEDNODEID]);
-            if(retval != UA_STATUSCODE_GOOD)
-                break;
-            drefs->targetIdsSize = srefs->targetIdsSize;
-        }
-        if(retval != UA_STATUSCODE_GOOD) {
-            UA_Node_deleteMembers(dst);
-            return retval;
-        }
+    retval = UA_NodeReferenceKind_copy(src->references, src->referencesSize, &dst->references);
+    if (retval != UA_STATUSCODE_GOOD) {
+        UA_Node_deleteMembers(dst);
+        return retval;
     }
 
     /* Copy unique content of the nodeclass */
