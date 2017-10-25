@@ -154,7 +154,7 @@ processAsyncResponse(UA_Client *client, UA_UInt32 requestId, UA_NodeId *response
         UA_deleteMembers(response, ac->responseType);
     } else {
         UA_LOG_INFO(client->config.logger, UA_LOGCATEGORY_CLIENT,
-                    "Could not decodee the response with Id %u", requestId);
+                    "Could not decode the response with Id %u", requestId);
     }
 
     /* Remove the callback */
