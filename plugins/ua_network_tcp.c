@@ -411,10 +411,10 @@ ServerNetworkLayerTCP_start(UA_ServerNetworkLayer *nl) {
     ServerNetworkLayerTCP *layer = (ServerNetworkLayerTCP *)nl->handle;
 
     /* Get the discovery url from the hostname */
-    UA_String du = UA_STRING_NULL;
     char hostname[256];
-    char discoveryUrl[256];
     if(gethostname(hostname, 255) == 0) {
+        char discoveryUrl[256];
+        UA_String du = UA_STRING_NULL;
 #ifndef _MSC_VER
         du.length = (size_t)snprintf(discoveryUrl, 255, "opc.tcp://%s:%d",
                                      hostname, layer->port);
@@ -424,8 +424,8 @@ ServerNetworkLayerTCP_start(UA_ServerNetworkLayer *nl) {
                                         layer->port);
 #endif
         du.data = (UA_Byte*)discoveryUrl;
+        UA_String_copy(&du, &nl->discoveryUrl);
     }
-    UA_String_copy(&du, &nl->discoveryUrl);
 
     /* Get addrinfo of the server and create server sockets */
     char portno[6];
