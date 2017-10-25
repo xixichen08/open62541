@@ -649,11 +649,20 @@ processCompleteChunk(void *const application,
                      UA_Connection *const connection,
                      UA_ByteString *const chunk) {
     UA_Server *const server = (UA_Server*)application;
-    if(!connection->channel)
-        return processCompleteChunkWithoutChannel(server, connection, chunk);
-    return UA_SecureChannel_processChunk(connection->channel, chunk,
-                                         processSecureChannelMessage,
-                                         server);
+    if(!connection->channel) {
+        UA_StatusCode retval = processCompleteChunkWithoutChannel(server, connection, chunk);
+        UA_LOG_DEBUG(server->config.logger, UA_LOGCATEGORY_NETWORK,
+                     "Connection %i | Processed a chunk with status code %s",
+                     connection->sockfd, UA_StatusCode_name(retval));
+        return retval;
+    }
+    UA_StatusCode retval =
+        UA_SecureChannel_processChunk(connection->channel, chunk,
+                                      processSecureChannelMessage, server);
+    UA_LOG_DEBUG_CHANNEL(server->config.logger, connection->channel,
+                         "Processed a chunk with status code %s",
+                         UA_StatusCode_name(retval));
+    return retval;
 }
 
 static void

@@ -248,9 +248,13 @@ finish:
 static UA_StatusCode
 client_processChunk(void *application, UA_Connection *connection, UA_ByteString *chunk) {
     SyncResponseDescription *rd = (SyncResponseDescription*)application;
-    return UA_SecureChannel_processChunk(&rd->client->channel, chunk,
-                                         processServiceResponse,
-                                         rd);
+    UA_assert(rd->response != NULL);
+    UA_StatusCode retval = UA_SecureChannel_processChunk(&rd->client->channel, chunk,
+                                                         processServiceResponse, rd);
+    UA_LOG_DEBUG(rd->client->config.logger, UA_LOGCATEGORY_NETWORK,
+                 "Connection %i | Processed Chunk with status code %s",
+                 connection->sockfd, UA_StatusCode_name(retval));
+    return retval;
 }
 
 /* Receive and process messages until a synchronous message arrives or the
