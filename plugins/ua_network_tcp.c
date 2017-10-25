@@ -413,15 +413,15 @@ ServerNetworkLayerTCP_start(UA_ServerNetworkLayer *nl) {
     /* Get the discovery url from the hostname */
     UA_String du = UA_STRING_NULL;
     char hostname[256];
+    char discoveryUrl[256];
     if(gethostname(hostname, 255) == 0) {
-        char discoveryUrl[256];
 #ifndef _MSC_VER
         du.length = (size_t)snprintf(discoveryUrl, 255, "opc.tcp://%s:%d",
                                      hostname, layer->port);
 #else
         du.length = (size_t)_snprintf_s(discoveryUrl, 255, _TRUNCATE,
                                         "opc.tcp://%s:%d", hostname,
-                    layer->port);
+                                        layer->port);
 #endif
         du.data = (UA_Byte*)discoveryUrl;
     }
