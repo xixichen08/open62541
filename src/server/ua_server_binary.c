@@ -288,8 +288,8 @@ processHEL(UA_Server *server, UA_Connection *connection,
     /* Encode and send the response */
     UA_Byte *bufPos = ack_msg.data;
     const UA_Byte *bufEnd = &ack_msg.data[ack_msg.length];
-    UA_TcpMessageHeader_encodeBinary(&ackHeader, &bufPos, &bufEnd);
-    UA_TcpAcknowledgeMessage_encodeBinary(&ackMessage, &bufPos, &bufEnd);
+    UA_TcpMessageHeader_encodeBinary(&ackHeader, &bufPos, bufEnd);
+    UA_TcpAcknowledgeMessage_encodeBinary(&ackMessage, &bufPos, bufEnd);
     ack_msg.length = ackHeader.messageSize;
     return connection->send(connection, &ack_msg);
 }

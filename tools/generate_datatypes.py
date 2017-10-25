@@ -48,8 +48,10 @@ builtin_overlayable = {"Boolean": "true", "SByte": "true", "Byte": "true",
                        "Int32": "UA_BINARY_OVERLAYABLE_INTEGER", "UInt32": "UA_BINARY_OVERLAYABLE_INTEGER",
                        "Int64": "UA_BINARY_OVERLAYABLE_INTEGER", "UInt64": "UA_BINARY_OVERLAYABLE_INTEGER",
                        "Float": "UA_BINARY_OVERLAYABLE_FLOAT", "Double": "UA_BINARY_OVERLAYABLE_FLOAT",
-                       "DateTime": "UA_BINARY_OVERLAYABLE_INTEGER", "StatusCode": "UA_BINARY_OVERLAYABLE_INTEGER",
-                       "Guid": "(UA_BINARY_OVERLAYABLE_INTEGER && offsetof(UA_Guid, data2) == sizeof(UA_UInt32) && " + \
+                       "DateTime": "UA_BINARY_OVERLAYABLE_INTEGER",
+                       "StatusCode": "UA_BINARY_OVERLAYABLE_INTEGER",
+                       "Guid": "(UA_BINARY_OVERLAYABLE_INTEGER && " + \
+                       "offsetof(UA_Guid, data2) == sizeof(UA_UInt32) && " + \
                        "offsetof(UA_Guid, data3) == (sizeof(UA_UInt16) + sizeof(UA_UInt32)) && " + \
                        "offsetof(UA_Guid, data4) == (2*sizeof(UA_UInt32)))"}
 
@@ -147,9 +149,10 @@ class Type(object):
         return funcs
 
     def encoding_h(self):
-        enc = "static UA_INLINE UA_StatusCode\nUA_%s_encodeBinary(const UA_%s *src, UA_Byte **bufPos, const UA_Byte **bufEnd) {\n    return UA_encodeBinary(src, %s, bufPos, bufEnd, NULL, NULL);\n}\n"
-        enc += "static UA_INLINE UA_StatusCode\nUA_%s_decodeBinary(const UA_ByteString *src, size_t *offset, UA_%s *dst) {\n    return UA_decodeBinary(src, offset, dst, %s, 0, NULL);\n}"
-        return enc % tuple(list(itertools.chain(*itertools.repeat([self.name, self.name, self.datatype_ptr()], 2))))
+        enc = "static UA_INLINE UA_StatusCode\nUA_%s_encodeBinary(const UA_%s *src, UA_Byte **bufPos, const UA_Byte *bufEnd) {\n    return UA_encodeBinary(src, %s, bufPos, &bufEnd, NULL, NULL);\n}\n"
+        enc += "static UA_INLINE UA_StatusCode\nUA_%s_decodeBinary(const UA_ByteString *src, size_t *offset, UA_%s *dst) {\n    return UA_decodeBinary(src, offset, dst, %s, 0, NULL);\n}\n"
+        enc += "static UA_INLINE size_t\nUA_%s_calcSizeBinary(const UA_%s *p) {\n    return UA_calcSizeBinary(p, %s);\n}"
+        return enc % tuple(list(itertools.chain(*itertools.repeat([self.name, self.name, self.datatype_ptr()], 3))))
 
 class BuiltinType(Type):
     def __init__(self, name):
